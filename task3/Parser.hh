@@ -1,0 +1,107 @@
+#pragma once
+
+#include <chrono>
+#include <cstddef>
+#include <exception>
+#include <filesystem>
+#include <list>
+#include <map>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <vector>
+
+namespace fs = std::filesystem;
+
+class ParserExeption : public std::exception {
+private:
+  std::string message;
+
+public:
+  ParserExeption(const std::string &message);
+  virtual const char *what() const noexcept override;
+};
+
+class FileData {
+private:
+  std::mutex _file_data_mutex;
+  long _no_lines;
+  long _no_commented_lines;
+  long _no_code_lines;
+  long _no_blank_lines;
+
+  bool _is_a_directory;
+  long _no_files;
+
+public:
+  FileData();
+  FileData(const long &no_lines, const long &no_commented_lines,
+           const long &no_code_lines, const long &no_blank_lines,
+           const long &no_files, const bool &is_a_directory) noexcept;
+  FileData(const FileData &data) noexcept;
+  // virtual ~FileData();
+
+  long getNOLines() const;
+  long getNOCommentedLines() const;
+  long getNOCodeLines() const;
+  long getNOBlankLines() const;
+  long getNOFiles() const;
+  bool getIsADirectory() const;
+
+  FileData operator+(const FileData &data);
+  FileData &operator+=(const FileData &data);
+
+  friend std::ostream &operator<<(std::ostream &output, const FileData &data);
+};
+
+class Parser {
+private:
+  fs::path _path;
+  std::list<fs::path> _extensions;
+  std::vector<std::thread> _threads;
+
+  std::mutex _files_mutex;
+  std::list<fs::path> _files;
+
+  std::mutex _running_mutex;
+  bool _running;
+  size_t _number_of_threads = 4;
+
+  std::condition_variable condition_v;
+  std::mutex _condition_mutex;
+  std::mutex _shit_mutex;
+
+  // std::mutex _result_mutex;
+  FileData _result;
+  // std::vector<FileData> _parsed_data;
+
+  void parseArguments(const int argc, const char **args);
+  static void checkIfFileExists(const fs::path &path);
+  static void checkIfFileIsDirectory(const fs::path &path);
+  static void checkIfFileIsRegular(const fs::path &path);
+
+  fs::path popFile();
+  void addFile(fs::path const &path);
+  bool hasFiles() const;
+
+  void threadFunction();
+  void startThreads();
+  void notifyThread();
+  FileData getResult();
+  bool getRunning();
+  void setRunning(bool running);
+
+  FileData parseFile(const fs::path &path);
+  FileData parseDirectory(const fs::path &path, const fs::path &extension);
+  FileData parseDirectory(const fs::path &path,
+                          const std::list<fs::path> &extensions);
+
+public:
+  Parser();
+  Parser(const fs::path &path);
+  Parser(const fs::path &path, const std::list<fs::path> &extensions);
+  Parser(const int argc, const char **args);
+  // virtual ~Parser();
+
+  FileData parse();
+};
