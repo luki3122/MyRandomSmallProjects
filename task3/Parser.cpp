@@ -139,7 +139,6 @@ bool Parser::hasFiles() const { return !_files.empty(); };
 void Parser::threadFunction() {
 
   FileData data;
-  std::cerr << "running: " << getRunning() << "\n";
   while (getRunning() || hasFiles()) {
     // std::unique_lock lock(_condition_mutex);
     //  std::cerr << "pop: " << std::this_thread::get_id() << '\n';
