@@ -16,17 +16,6 @@ node:
   8-15  void* next
 
 */
-namespace Strings {
-
-int StringGetSize(String str);
-void StringCopy(String dest, String src);
-void StringCopyCount(String dest, String src, int amount);
-bool StringCompare(String str1, String str2);
-int StringCountSubstrings(String target, String substring);
-char *StringFindFirst(String target, String substring);
-String StringReplace(String target, String before, String after);
-
-} // namespace Strings
 
 namespace StringLists {
 
