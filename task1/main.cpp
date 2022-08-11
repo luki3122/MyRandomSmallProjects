@@ -14,6 +14,7 @@ int main() {
   StringLists::Add(list, str);
   StringLists::Add(list, a);
   StringLists::Add(list, b);
+  StringLists::Remove(list, a);
 
   for (int i = 0; i < StringLists::GetSize(list); i++) {
     std::cout << StringLists::StringListAtIndex(list, i) << '\n';

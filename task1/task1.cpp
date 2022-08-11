@@ -5,6 +5,23 @@
 
 // helper functions
 
+char *StringFindFirst(String target, String substring) {
+  while (*target) {
+    char *index = target;
+    char *sub = substring;
+    while (*sub && (*index == *sub)) {
+      index++;
+      sub++;
+    }
+    if (!*sub) {
+      return target;
+    }
+
+    target++;
+  }
+  return NULL;
+}
+
 inline void StringListSetSize(StringList list, int size) {
   *((int *)list) = size;
 }
@@ -30,110 +47,12 @@ StringListNode NodeAtIndex(StringList list, int index) {
 int NodeFindNextMatch(StringList list, String str, int start_index) {
   StringListNode node = NodeAtIndex(list, start_index);
   for (int i = start_index; i < StringLists::GetSize(list); i++) {
-    if (Strings::StringCompare(StringLists::Nodes::NodeGetString(node), str)) {
+    if (!strcmp(StringLists::Nodes::NodeGetString(node), str)) {
       return i;
     }
   }
   return -1;
 }
-
-namespace Strings {
-// returns size not including null char
-int StringGetSize(String str) {
-  int size = 0;
-  for (; str[size] != '\0'; size++)
-    ;
-  return size;
-}
-// copy string including null char
-// not safe at all
-void StringCopy(String dest, String src) {
-  while (src) {
-    *dest = *src;
-  }
-}
-// copy amount chars from src to dest
-//  not safe at all
-void StringCopyCount(String dest, String src, int amount) {
-  while (amount--) {
-    *dest++ = *src++;
-  }
-}
-// copy src to dest until we get to end pointer in dest
-void StringCopyUntil(String dest, String src, char *end) {
-  while (dest != end) {
-    *dest++ = *src++;
-  }
-}
-
-// compare strings including null char,
-// returns true if they are the same,
-// false otherwise
-bool StringCompare(String str1, String str2) {
-  int str1Size = Strings::StringGetSize(str1);
-  if (str1Size != Strings::StringGetSize(str2))
-    return false;
-
-  bool result = true;
-  for (int i = 0; i <= str1Size; i++) {
-    result &= str1[i] == str2[i];
-  }
-  return result;
-}
-
-int StringCountSubstrings(String target, String substring) {
-  int count = 0;
-  char *next = StringFindFirst(target, substring);
-  int sub_size = StringGetSize(substring);
-  while (next) {
-    next += sub_size;
-    count++;
-    next = StringFindFirst(next, substring);
-  }
-  return count;
-}
-
-char *StringFindFirst(String target, String substring) {
-  while (*target) {
-    char *index = target;
-    char *sub = substring;
-    while (*sub && (*index == *sub)) {
-      index++;
-      sub++;
-    }
-    if (!*sub) {
-      return target;
-    }
-
-    target++;
-  }
-  return NULL;
-}
-
-String StringReplace(String target, String before, String after) {
-
-  int amount = StringCountSubstrings(target, before);
-
-  if (amount == 0) {
-    return NULL;
-  }
-  int size = StringGetSize(target);
-  int before_size = StringGetSize(before);
-  int after_size = StringGetSize(after);
-
-  size = size - (after_size - before_size) * amount;
-  String new_char = (char *)malloc(sizeof(char) * (size + 1));
-  char *iterator = new_char;
-  while (amount--) {
-    char *next = StringFindFirst(target, before);
-    StringCopyUntil(iterator, target, next);
-    StringCopyCount(next, after, after_size);
-    iterator = next + after_size;
-  }
-  return new_char;
-}
-
-} // namespace Strings
 
 namespace StringLists::Nodes {
 inline char *NodeGetString(StringListNode node) { return *((char **)node); }
@@ -150,7 +69,7 @@ inline void NodeSetNext(StringListNode node, StringList next_node) {
 
 StringListNode NodeInit(String str, StringListNode next_node) {
   StringListNode node = malloc(16);
-  int size = Strings::StringGetSize(str);
+  int size = strlen(str);
   String new_str = (char *)malloc(size);
   strcpy(new_str, str);
   StringLists::Nodes::NodeSetString(node, new_str);
@@ -199,7 +118,7 @@ void Add(StringList list, String str) {
 void Remove(StringList list, String str) {
   StringListNode node = StringListGetNodes(list);
   for (int i = 0; i < GetSize(list); i++, node = Nodes::NodeGetNext(node)) {
-    if (Strings::StringCompare(Nodes::NodeGetString(node), str)) {
+    if (!strcmp(Nodes::NodeGetString(node), str)) {
       RemoveAtIndex(list, i);
     }
   }
@@ -223,7 +142,7 @@ void RemoveAtIndex(StringList list, int index) {
 int IndexOf(StringList list, String str) {
   StringListNode node = StringListGetNodes(list);
   for (int i = 0; i < GetSize(list); i++, node = Nodes::NodeGetNext(node)) {
-    if (Strings::StringCompare(Nodes::NodeGetString(node), str)) {
+    if (!strcmp(Nodes::NodeGetString(node), str)) {
       return i;
     }
   }
@@ -246,8 +165,6 @@ void RemoveDuplicates(StringList list) {
     }
   }
 }
-
-void ReplaceInStrings(StringList list, String before, String after) {}
 
 void Sort(StringList list) {}
 } // namespace StringLists
