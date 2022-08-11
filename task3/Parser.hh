@@ -67,7 +67,7 @@ private:
   bool _running;
   size_t _number_of_threads = 4;
 
-  std::condition_variable condition_v;
+  // std::condition_variable condition_v;
   std::mutex _condition_mutex;
   std::mutex _shit_mutex;
 

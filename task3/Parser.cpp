@@ -120,6 +120,7 @@ void Parser::parseArguments(const int argc, const char **args) {
       _path = "";
       _extensions.clear();
     }
+  std::cerr << "Path: " << _path << "\nExt: " << _extensions.front() << '\n';
 }
 
 fs::path Parser::popFile() {
@@ -138,11 +139,11 @@ bool Parser::hasFiles() const { return !_files.empty(); };
 void Parser::threadFunction() {
 
   FileData data;
-  while (getRunning()) {
+  std::cerr << "running: " << getRunning() << "\n";
+  while (getRunning() || hasFiles()) {
     // std::unique_lock lock(_condition_mutex);
     //  std::cerr << "pop: " << std::this_thread::get_id() << '\n';
-    // lock.unlock();
-
+    // lock.unlock()
     while (hasFiles()) {
       fs::path path = popFile();
       data += parseFile(path);
@@ -155,6 +156,7 @@ void Parser::threadFunction() {
 };
 
 void Parser::startThreads() {
+  setRunning(true);
   for (size_t i = _number_of_threads; i; i--) {
     _threads.push_back(std::thread(&Parser::threadFunction, this));
   }
@@ -163,7 +165,7 @@ void Parser::startThreads() {
 void Parser::notifyThread() {
 
   _condition_mutex.unlock();
-  condition_v.notify_one();
+  // condition_v.notify_one();
 }
 
 FileData Parser::getResult() {
