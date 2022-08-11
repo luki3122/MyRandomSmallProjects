@@ -127,7 +127,7 @@ void Remove(StringList list, String str) {
 void RemoveAtIndex(StringList list, int index) {
   if (index == -1)
     return;
-  StringListNode node = NodeAtIndex(list, 0);
+  StringListNode node = NodeAtIndex(list, index);
   StringListNode next_node = StringLists::Nodes::NodeGetNext(node);
   StringLists::Nodes::NodeDestroy(node);
   if (index == 0) {
