@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bits/types/time_t.h>
 #include <chrono>
 #include <cstddef>
 #include <exception>
@@ -32,7 +33,7 @@ private:
   long _no_blank_lines;
   bool _is_a_directory;
   long _no_files;
-  std::chrono::milliseconds _time_elapsed;
+  std::chrono::duration<double, std::milli> _time_elapsed;
 
 public:
   FileData();
@@ -49,7 +50,8 @@ public:
   long getNOBlankLines() const;
   long getNOFiles() const;
   bool getIsADirectory() const;
-  std::chrono::milliseconds getTimeElapsed() const;
+  std::chrono::duration<double, std::milli> getTimeElapsed() const;
+  std::string getFormatedTime() const;
 
   FileData operator+(const FileData &data);
   FileData &operator+=(const FileData &data);
@@ -60,6 +62,7 @@ public:
 class Parser {
 private:
   fs::path _path;
+  fs::path _log_file_path;
   std::list<fs::path> _extensions;
   std::vector<std::thread> _threads;
 
@@ -88,7 +91,6 @@ private:
 
   void threadFunction();
   void startThreads();
-  void notifyThread();
   FileData getResult();
   bool getRunning();
   void setRunning(bool running);
@@ -106,4 +108,5 @@ public:
   // virtual ~Parser();
 
   FileData parse();
+  void parseToFile();
 };

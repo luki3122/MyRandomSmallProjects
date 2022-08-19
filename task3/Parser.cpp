@@ -1,5 +1,6 @@
 #include "Parser.hh"
 #include <algorithm>
+#include <bits/chrono.h>
 #include <chrono>
 #include <cstddef>
 #include <exception>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <mutex>
 #include <ratio>
+#include <sstream>
 #include <string>
 #include <system_error>
 #include <thread>
@@ -40,8 +42,24 @@ long FileData::getNOBlankLines() const { return _no_blank_lines; }
 
 bool FileData::getIsADirectory() const { return _is_a_directory; }
 
-std::chrono::milliseconds FileData::getTimeElapsed() const {
+std::chrono::duration<double, std::milli> FileData::getTimeElapsed() const {
   return _time_elapsed;
+}
+
+std::string FileData::getFormatedTime() const {
+  std::string res = "";
+  auto time = getTimeElapsed();
+  auto m = std::chrono::duration_cast<std::chrono::minutes>(time);
+  time -= m;
+  auto s = std::chrono::duration_cast<std::chrono::seconds>(time);
+  time -= s;
+  auto mili = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+  time -= mili;
+  auto micro = std::chrono::duration_cast<std::chrono::microseconds>(time);
+  std::stringstream ss;
+  ss << m.count() << "m:" << s.count() << "s:" << mili.count() << "ms";
+  ss >> res;
+  return res;
 }
 
 long FileData::getNOFiles() const { return _no_files; }
@@ -64,7 +82,7 @@ FileData &FileData::operator+=(const FileData &data) {
   _no_code_lines += data.getNOCodeLines();
   _no_blank_lines += data.getNOBlankLines();
   _no_files += data.getNOFiles();
-  _is_a_directory = false;
+  _is_a_directory = true;
   _time_elapsed += data.getTimeElapsed();
   return *this;
 }
@@ -76,7 +94,7 @@ std::ostream &operator<<(std::ostream &output, const FileData &data) {
          << "Blank lines:     " << data.getNOBlankLines() << '\n'
          << "Files parsed:    " << data.getNOFiles() << '\n'
          << "Is a directory:  " << data.getIsADirectory() << '\n'
-         << "Time elapsed:    " << data.getTimeElapsed().count() << '\n';
+         << "Time elapsed:    " << data.getFormatedTime() << '\n';
   return output;
 }
 
@@ -102,40 +120,38 @@ void Parser::checkIfFileIsRegular(const fs::path &path) {
 
 void Parser::parseArguments(const int argc, const char **args) {
   std::list<fs::path> temp;
-  temp.push_back(fs::path(".cpp"));
-  temp.push_back(fs::path(".hpp"));
-  temp.push_back(fs::path(".c"));
-  temp.push_back(fs::path(".h"));
+  _extensions.push_back(fs::path(".cpp"));
+  _extensions.push_back(fs::path(".hpp"));
+  _extensions.push_back(fs::path(".c"));
+  _extensions.push_back(fs::path(".h"));
 
   if (argc <= 1) {
     _path = "./";
-    _extensions = temp;
-  } else
-
-    try {
-      if (argc > 1) {
-        _path = fs::path(args[1]);
-      }
-      if (argc > 2) {
-        for (int i = 2; i < argc; i++) {
-          _extensions.push_back(fs::path(args[i]));
-        }
-      } else {
-        _extensions = temp;
-      }
-
-    } catch (std::exception e) {
-      std::cerr << e.what() << '\n';
-      _path = "";
-      _extensions.clear();
+  }
+  try {
+    if (argc > 1) {
+      _path = fs::path(args[1]);
     }
+    if (argc > 2) {
+      _log_file_path = fs::path(args[2]);
+    }
+  } catch (std::exception e) {
+    std::cerr << e.what() << '\n';
+    _path = "";
+    _log_file_path = "";
+    _extensions.clear();
+  }
   std::cerr << "Path: " << _path << "\nExt: " << _extensions.front() << '\n';
 }
 
 fs::path Parser::popFile() {
   std::unique_lock lock(_files_mutex);
-  fs::path p = _files.front();
-  _files.pop_front();
+  fs::path p;
+  p.clear();
+  if (hasFiles()) {
+    p = _files.front();
+    _files.pop_front();
+  }
   return p;
 };
 void Parser::addFile(fs::path const &path) {
@@ -149,14 +165,9 @@ void Parser::threadFunction() {
 
   FileData data;
   while (getRunning() || hasFiles()) {
-    // std::unique_lock lock(_condition_mutex);
-    //  std::cerr << "pop: " << std::this_thread::get_id() << '\n';
-    // lock.unlock()
-    while (hasFiles()) {
-      fs::path path = popFile();
+    fs::path path = popFile();
+    if (!path.empty())
       data += parseFile(path);
-    }
-    // lock.lock();
   }
 
   std::unique_lock res(_result_mutex);
@@ -168,12 +179,6 @@ void Parser::startThreads() {
   for (size_t i = _number_of_threads; i; i--) {
     _threads.push_back(std::thread(&Parser::threadFunction, this));
   }
-}
-
-void Parser::notifyThread() {
-
-  _condition_mutex.unlock();
-  // condition_v.notify_one();
 }
 
 FileData Parser::getResult() {
@@ -216,6 +221,12 @@ FileData Parser::parse() {
     return parseFile(_path);
 }
 
+void Parser::parseToFile() {
+  std::ofstream output(_log_file_path);
+
+  output << parse();
+}
+
 FileData Parser::parseFile(const fs::path &path) {
   checkIfFileExists(path);
   checkIfFileIsRegular(path);
@@ -225,7 +236,7 @@ FileData Parser::parseFile(const fs::path &path) {
   long comments = 0;
   long code = 0;
   long blank = 0;
-  auto start = std::chrono::steady_clock::now();
+  std::chrono::time_point start = std::chrono::steady_clock::now();
   while (input.good()) {
     lines++;
     std::string line;
@@ -243,12 +254,9 @@ FileData Parser::parseFile(const fs::path &path) {
     }
     code++;
   }
-  auto end = std::chrono::steady_clock::now();
-  ;
-  return FileData(
-      lines, comments, code, blank, 1, false,
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-          .count());
+  std::chrono::time_point end = std::chrono::steady_clock::now();
+  std::chrono::duration<double, std::milli> duration = end - start;
+  return FileData(lines, comments, code, blank, 1, false, duration);
 }
 
 FileData Parser::parseDirectory(const fs::path &path,
@@ -269,7 +277,6 @@ FileData Parser::parseDirectory(const fs::path &path,
         extensions.end())
       continue;
     addFile(p.path());
-    // notifyThread();
   }
   return getResult();
 }

@@ -4,5 +4,10 @@
 
 int main(int argc, const char **argv) {
   Parser p(argc, argv);
-  std::cout << p.parse();
+  if (argc < 3) {
+
+    std::cout << p.parse();
+  } else {
+    p.parseToFile();
+  }
 }
