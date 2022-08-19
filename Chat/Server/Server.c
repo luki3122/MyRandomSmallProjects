@@ -17,6 +17,11 @@
 #define FUNCTION_PREFIX '!'
 #define MAX_NAME_LENGTH 12
 
+// struct session {
+//   int socket;
+//   char name[MAX_NAME_LENGTH + 1];
+// };
+// struct session Sessions[MAX_CLIENTS];
 int Server_socket;
 fd_set Current_sockets;
 int Max_socket;
@@ -52,10 +57,9 @@ int check(int exp, char *error_message) {
 
 void nameChange(char *buffer, size_t buffer_size, int client_socket) {
   int iter = 0;
-  char *read = buffer;
+  char *read = buffer + 1;
   while (!charIsWhitespace(*read++) && iter++ < buffer_size - 1)
     ;
-  printf("buff: %s", read);
 
   char name[MAX_NAME_LENGTH + 1];
   char *write = name;
@@ -65,7 +69,6 @@ void nameChange(char *buffer, size_t buffer_size, int client_socket) {
     *write++ = *read++;
 
   *write = 0;
-  printf("name: %s\n", name);
   strcpy(Names[client_socket], name);
 }
 
@@ -83,27 +86,32 @@ void processFunctions(char *buffer, size_t buffer_size, int client_socket) {
 
   if (!isFunction(buffer))
     return;
-  if (checkForFunction(buffer, buffer_size, "imie")) {
+  if (checkForFunction(buffer, buffer_size, "name")) {
+    // getArgs()
     nameChange(buffer, buffer_size, client_socket);
   }
 }
 
 void handleClientDisconnect(int client_socket) {
-  printf("SERVER: Client Disconnected: %i\n", client_socket);
+  // printf("SERVER: Client Disconnected: %i\n", client_socket);
   strcpy(Names[client_socket], "Annon");
   FD_CLR(client_socket, &Current_sockets);
+}
+
+void sendMessage(int sender_socket, int receiver_socket, const char *buffer) {
+  char name_buffer[MAX_NAME_LENGTH + 3];
+  strcpy(name_buffer, getName(sender_socket));
+  strcat(name_buffer, ": ");
+  send(receiver_socket, name_buffer, strlen(name_buffer), 0);
+  send(receiver_socket, buffer, strlen(buffer), 0);
 }
 
 void broadcast(int sender_socket, char *buffer, size_t buffer_size) {
   for (int i = 0; i <= Max_socket; i++) {
     if (FD_ISSET(i, &Current_sockets)) {
       if (i != sender_socket && i != Server_socket) {
-        char name_buffer[MAX_NAME_LENGTH + 3];
-        strcpy(name_buffer, getName(sender_socket));
-        strcat(name_buffer, ": ");
-        send(i, name_buffer, strlen(name_buffer), 0);
-        send(i, buffer, strlen(buffer), 0);
-        printf("SERVER: Message Sent to: %i\n", i);
+        sendMessage(sender_socket, i, buffer);
+        // printf("SERVER: Message Sent to: %i\n", i);
       }
     }
   }
@@ -143,12 +151,12 @@ int acceptNewConnection(int server_socket) {
 }
 
 boolean containsBannedWords(const char *string) {
-  boolean res = 0;
 
   for (int i = 0; Banned_words[i]; i++) {
-    res |= stringContains(string, Banned_words[i]);
+    if (strstr(string, Banned_words[i]))
+      return 1;
   }
-  return res;
+  return 0;
 }
 
 void handleConnection(int client_socket) {
@@ -156,7 +164,7 @@ void handleConnection(int client_socket) {
   int bytes_read;
 
   bytes_read = recv(client_socket, buffer, MESSAGE_BUFFER_SIZE, 0);
-  if (bytes_read == 0) {
+  if (bytes_read <= 0) {
     handleClientDisconnect(client_socket);
     return;
   }
@@ -181,23 +189,20 @@ int main(int argc, char const *argv[]) {
 
   while (1) {
     ready_sockets = Current_sockets;
-    fd_set temp = ready_sockets;
-    // for (int i = 31; i >= 0; i--) {
-    //   printf("%i ", temp.fds_bits[i]);
-    // }
-    // printf("\n");
+
     if (select(Max_socket + 1, &ready_sockets, NULL, NULL, NULL) < 0)
       perror("Select Error: select()");
+
     for (int i = 0; i <= Max_socket; i++) {
       if (FD_ISSET(i, &ready_sockets)) {
         if (i == Server_socket) {
 
           int client_socket = acceptNewConnection(Server_socket);
-          printf("SERVER: New connection on socket: %i\n", client_socket);
+          // printf("SERVER: New connection on socket: %i\n", client_socket);
           FD_SET(client_socket, &Current_sockets);
           Max_socket = MAX(Max_socket, client_socket);
         } else {
-          printf("SERVER: Message Sent from client: %i\n", i);
+          // printf("SERVER: Message Sent from client: %i\n", i);
           handleConnection(i);
           // FD_CLR(i, &Current_sockets);
         }

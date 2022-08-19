@@ -8,6 +8,7 @@
 #include <ios>
 #include <iostream>
 #include <mutex>
+#include <ratio>
 #include <string>
 #include <system_error>
 #include <thread>
@@ -22,15 +23,12 @@ FileData::FileData()
 
 FileData::FileData(const long &no_lines, const long &no_commented_lines,
                    const long &no_code_lines, const long &no_blank_lines,
-                   const long &no_files, const bool &is_a_directory) noexcept
+                   const long &no_files, const bool &is_a_directory,
+                   const auto time_elapsed) noexcept
     : _no_lines(no_lines), _no_commented_lines(no_commented_lines),
       _no_code_lines(no_code_lines), _no_blank_lines(no_blank_lines),
-      _no_files(no_files), _is_a_directory(is_a_directory) {}
-
-FileData::FileData(const FileData &data) noexcept
-    : FileData(data.getNOLines(), data.getNOCommentedLines(),
-               data.getNOCodeLines(), data.getNOBlankLines(), data.getNOFiles(),
-               data.getIsADirectory()) {}
+      _no_files(no_files), _is_a_directory(is_a_directory),
+      _time_elapsed(time_elapsed) {}
 
 long FileData::getNOLines() const { return _no_lines; }
 
@@ -42,7 +40,16 @@ long FileData::getNOBlankLines() const { return _no_blank_lines; }
 
 bool FileData::getIsADirectory() const { return _is_a_directory; }
 
+std::chrono::milliseconds FileData::getTimeElapsed() const {
+  return _time_elapsed;
+}
+
 long FileData::getNOFiles() const { return _no_files; }
+
+FileData::FileData(const FileData &data) noexcept
+    : FileData(data.getNOLines(), data.getNOCommentedLines(),
+               data.getNOCodeLines(), data.getNOBlankLines(), data.getNOFiles(),
+               data.getIsADirectory(), data.getTimeElapsed()) {}
 
 FileData FileData::operator+(const FileData &data) {
   FileData temp(*this);
@@ -58,6 +65,7 @@ FileData &FileData::operator+=(const FileData &data) {
   _no_blank_lines += data.getNOBlankLines();
   _no_files += data.getNOFiles();
   _is_a_directory = false;
+  _time_elapsed += data.getTimeElapsed();
   return *this;
 }
 
@@ -67,7 +75,8 @@ std::ostream &operator<<(std::ostream &output, const FileData &data) {
          << "Commented lines: " << data.getNOCommentedLines() << '\n'
          << "Blank lines:     " << data.getNOBlankLines() << '\n'
          << "Files parsed:    " << data.getNOFiles() << '\n'
-         << "Is a directory:  " << data.getIsADirectory() << '\n';
+         << "Is a directory:  " << data.getIsADirectory() << '\n'
+         << "Time elapsed:    " << data.getTimeElapsed().count() << '\n';
   return output;
 }
 
@@ -150,7 +159,7 @@ void Parser::threadFunction() {
     // lock.lock();
   }
 
-  std::unique_lock shit(_shit_mutex);
+  std::unique_lock res(_result_mutex);
   _result += data;
 };
 
@@ -200,7 +209,7 @@ Parser::Parser(const int argc, const char **args) {
 
 FileData Parser::parse() {
   checkIfFileExists(_path);
-
+  FileData result;
   if (fs::is_directory(_path))
     return parseDirectory(_path, _extensions);
   else
@@ -216,7 +225,7 @@ FileData Parser::parseFile(const fs::path &path) {
   long comments = 0;
   long code = 0;
   long blank = 0;
-
+  auto start = std::chrono::steady_clock::now();
   while (input.good()) {
     lines++;
     std::string line;
@@ -234,7 +243,12 @@ FileData Parser::parseFile(const fs::path &path) {
     }
     code++;
   }
-  return FileData(lines, comments, code, blank, 1, false);
+  auto end = std::chrono::steady_clock::now();
+  ;
+  return FileData(
+      lines, comments, code, blank, 1, false,
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+          .count());
 }
 
 FileData Parser::parseDirectory(const fs::path &path,
@@ -255,8 +269,7 @@ FileData Parser::parseDirectory(const fs::path &path,
         extensions.end())
       continue;
     addFile(p.path());
-    notifyThread();
+    // notifyThread();
   }
-  std::cerr << "end\n";
   return getResult();
 }

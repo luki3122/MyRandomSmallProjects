@@ -4,7 +4,7 @@
 int charIsValid(char c) {
   if (c >= 32 && c <= 126)
     return 1;
-  if (c == 0 || c == 10 || c == 13)
+  if (c == 0 || c == '\n' || c == '\r')
     return 1;
   return 0;
 }

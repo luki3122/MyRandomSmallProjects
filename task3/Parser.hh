@@ -7,6 +7,7 @@
 #include <list>
 #include <map>
 #include <mutex>
+#include <ratio>
 #include <string>
 #include <thread>
 #include <vector>
@@ -29,15 +30,16 @@ private:
   long _no_commented_lines;
   long _no_code_lines;
   long _no_blank_lines;
-
   bool _is_a_directory;
   long _no_files;
+  std::chrono::milliseconds _time_elapsed;
 
 public:
   FileData();
   FileData(const long &no_lines, const long &no_commented_lines,
            const long &no_code_lines, const long &no_blank_lines,
-           const long &no_files, const bool &is_a_directory) noexcept;
+           const long &no_files, const bool &is_a_directory,
+           const auto _time_elapsed) noexcept;
   FileData(const FileData &data) noexcept;
   // virtual ~FileData();
 
@@ -47,6 +49,7 @@ public:
   long getNOBlankLines() const;
   long getNOFiles() const;
   bool getIsADirectory() const;
+  std::chrono::milliseconds getTimeElapsed() const;
 
   FileData operator+(const FileData &data);
   FileData &operator+=(const FileData &data);
@@ -69,9 +72,8 @@ private:
 
   // std::condition_variable condition_v;
   std::mutex _condition_mutex;
-  std::mutex _shit_mutex;
 
-  // std::mutex _result_mutex;
+  std::mutex _result_mutex;
   FileData _result;
   // std::vector<FileData> _parsed_data;
 
