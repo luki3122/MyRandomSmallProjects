@@ -14,9 +14,10 @@
 #include <string>
 #include <system_error>
 #include <thread>
-// ParseExeption
-ParserExeption::ParserExeption(const std::string &message) : message(message){};
-const char *ParserExeption::what() const noexcept { return message.c_str(); };
+// ParseException
+ParserException::ParserException(const std::string &message)
+    : message(message){};
+const char *ParserException::what() const noexcept { return message.c_str(); };
 
 // FileData
 FileData::FileData()
@@ -101,20 +102,20 @@ std::ostream &operator<<(std::ostream &output, const FileData &data) {
 void Parser::checkIfFileExists(const fs::path &path) {
   if (fs::exists(path))
     return;
-  throw ParserExeption(
+  throw ParserException(
       std::string("File does not exist: ").append(path.string()));
 }
 void Parser::checkIfFileIsDirectory(const fs::path &path) {
   if (fs::is_directory(path))
     return;
-  throw ParserExeption(
+  throw ParserException(
       std::string("File is not a directory: ").append(path.string()));
 }
 
 void Parser::checkIfFileIsRegular(const fs::path &path) {
   if (fs::is_regular_file(path))
     return;
-  throw ParserExeption(
+  throw ParserException(
       std::string("File is not regular file: ").append(path.string()));
 }
 
@@ -165,6 +166,7 @@ void Parser::threadFunction() {
 
   FileData data;
   while (getRunning() || hasFiles()) {
+
     fs::path path = popFile();
     if (!path.empty())
       data += parseFile(path);

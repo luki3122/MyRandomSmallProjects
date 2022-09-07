@@ -83,6 +83,7 @@ requires storable<T> AnyType::AnyType(const T value) {
 }
 
 template <typename T> T AnyType::getValue() const { return storage->get<T>(); }
+
 template <typename T>
 requires storable<T> AnyType &AnyType::operator=(const T &value) {
   if (typeid(T).name() == type_name) {

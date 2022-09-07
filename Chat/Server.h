@@ -1,8 +1,13 @@
 #pragma once
 
-#include <stddef.h>
-#include <sys/_types/_size_t.h>
 #include <sys/signal.h>
+
+#ifdef __APPLE__
+#include <sys/_types/_size_t.h>
+#endif
+#ifdef __linux__
+#include <stddef.h>
+#endif
 
 #define MAX(x, y) (x > y ? x : y)
 #define MIN(x, y) (x < y ? x : y)

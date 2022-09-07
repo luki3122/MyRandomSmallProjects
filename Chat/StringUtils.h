@@ -1,6 +1,11 @@
 #pragma once
 
+#ifdef __APPLE__
 #include <sys/_types/_size_t.h>
+#endif
+#ifdef __linux__
+#include <stddef.h>
+#endif
 
 int charIsValid(char c);
 const char *getNextWord(const char *string);

@@ -13,14 +13,16 @@
 #include <thread>
 #include <vector>
 
+#define NUMBER_OF_THREADS 4
+
 namespace fs = std::filesystem;
 
-class ParserExeption : public std::exception {
+class ParserException : public std::exception {
 private:
   std::string message;
 
 public:
-  ParserExeption(const std::string &message);
+  ParserException(const std::string &message);
   virtual const char *what() const noexcept override;
 };
 
@@ -71,7 +73,7 @@ private:
 
   std::mutex _running_mutex;
   bool _running;
-  size_t _number_of_threads = 4;
+  size_t _number_of_threads = NUMBER_OF_THREADS;
 
   // std::condition_variable condition_v;
   std::mutex _condition_mutex;

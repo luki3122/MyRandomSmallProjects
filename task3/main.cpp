@@ -1,13 +1,13 @@
-#include "Parser.hh"
+#include "./Parser/Parser.hh"
+#include <filesystem>
 #include <iostream>
-#include <thread>
+#include <string>
 
 int main(int argc, const char **argv) {
-  Parser p(argc, argv);
-  if (argc < 3) {
-
-    std::cout << p.parse();
-  } else {
-    p.parseToFile();
+  Parser parser;
+  fs::path to_parse("./");
+  if (argc > 1) {
+    to_parse = argv[1];
   }
+  std::cout << parser.parseDirectoryAsync(to_parse).print();
 }

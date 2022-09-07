@@ -6,10 +6,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+
+#ifdef __APPLE__
 #include <sys/_select.h>
 #include <sys/_types/_fd_def.h>
-#include <sys/_types/_size_t.h>
-#include <sys/socket.h>
+#endif
+#ifdef __linux__
+#endif
 
 #define PORT 8080
 #define MAX_CLIENTS 30
