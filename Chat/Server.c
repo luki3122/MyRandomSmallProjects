@@ -175,7 +175,6 @@ void handleConnection(int client_socket) {
 
   formatMessage(buffer, MESSAGE_BUFFER_SIZE);
   processFunctions(buffer, MESSAGE_BUFFER_SIZE, client_socket);
-  printLog(CLIENT, buffer);
   if (containsBannedWords(buffer))
     return;
   broadcast(client_socket, buffer, MESSAGE_BUFFER_SIZE);

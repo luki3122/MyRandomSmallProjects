@@ -2,9 +2,9 @@
 #include <string.h>
 
 // node struct functions
-inline String NodeGetString(StringListNode node) { return *((String *)node); }
+String NodeGetString(StringListNode node) { return *((String *)node); }
 
-inline void NodeSetString(StringListNode node, String str) {
+void NodeSetString(StringListNode node, String str) {
   if (NodeGetString(node)) {
     free(NodeGetString(node));
   }
@@ -14,11 +14,9 @@ inline void NodeSetString(StringListNode node, String str) {
   *((String *)node) = new_str;
 }
 
-inline StringListNode NodeGetNext(StringListNode node) {
-  return *((void **)node + 1);
-}
+StringListNode NodeGetNext(StringListNode node) { return *((void **)node + 1); }
 
-inline void NodeSetNext(StringListNode node, StringList next_node) {
+void NodeSetNext(StringListNode node, StringList next_node) {
   *((void **)node + 1) = next_node;
 }
 
@@ -32,22 +30,20 @@ StringListNode NodeInit(String str, StringListNode next_node) {
   return node;
 }
 
-inline void NodeDestroy(StringListNode node) {
+void NodeDestroy(StringListNode node) {
   free(NodeGetString(node));
   free(node);
 }
 
 // stringList node function
-inline void StringListSetSize(StringList list, int size) {
-  *((int *)list) = size;
-}
-inline int GetSize(StringList list) { return *((int *)list); }
+void StringListSetSize(StringList list, int size) { *((int *)list) = size; }
+int GetSize(StringList list) { return *((int *)list); }
 
-inline StringListNode StringListGetNodes(StringList list) {
+StringListNode StringListGetNodes(StringList list) {
   return *((void **)list + 1);
 }
 
-inline void StringListSetNodes(StringList list, StringListNode node) {
+void StringListSetNodes(StringList list, StringListNode node) {
   *((void **)list + 1) = node;
 }
 
@@ -180,7 +176,9 @@ void AddAtIndex(StringList list, String str, size_t index) {
     StringListSetNodes(list, new_node);
 
   } else {
-    next_node = StringListNodeAtIndex(list, index);
+    StringListNode prev_node = StringListNodeAtIndex(list, index - 1);
+    next_node = NodeGetNext(prev_node);
+    NodeSetNext(prev_node, new_node);
   }
 
   NodeSetNext(new_node, next_node);
@@ -188,7 +186,7 @@ void AddAtIndex(StringList list, String str, size_t index) {
   StringListSetSize(list, GetSize(list) + 1);
 }
 void PushBack(StringList list, String str) {
-  AddAtIndex(list, str, GetSize(list) + 1);
+  AddAtIndex(list, str, GetSize(list));
 }
 
 void RemoveAllString(StringList list, String str) {

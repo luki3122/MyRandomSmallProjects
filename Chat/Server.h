@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Definitions.h"
 #include <sys/signal.h>
 
 #ifdef __APPLE__
@@ -9,15 +10,8 @@
 #include <stddef.h>
 #endif
 
-#define MAX(x, y) (x > y ? x : y)
-#define MIN(x, y) (x < y ? x : y)
-
-#define SERVER 0
-#define CLIENT 1
-
 typedef int boolean;
 
-void printLog(int source, const char *message);
 int check(int exp, char *error_message);
 
 void nameChange(char *buffer, size_t buffer_size, int client_socket);
