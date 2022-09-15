@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Definitions.hh"
+#include "../../Definitions.hh"
 #include "../FileData/FileData.hh"
 #include "../FileData/ParsedDirectoryData.hh"
 #include "ParserOptions.hh"

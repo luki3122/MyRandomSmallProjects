@@ -1,5 +1,6 @@
 #include "ParsedDirectoryData.hh"
 #include "ParsedFileData.hh"
+#include <sstream>
 
 ParsedDirectoryData::~ParsedDirectoryData() {}
 
@@ -34,9 +35,14 @@ void ParsedDirectoryData::setParsingDuration(
 
 std::string ParsedDirectoryData::print() const {
   ParsedFileData temp;
+  size_t no_files = 0;
   for (const ParsedFileData &data : getFileDataList()) {
     temp += data;
+    no_files++;
   }
   temp.setFileName(getDirName());
-  return temp.print();
+  temp.setParsingDuration(getParsingDuration());
+  std::stringstream ss;
+  ss << temp.print() << "Files parsed:  " << no_files << '\n';
+  return ss.str();
 }

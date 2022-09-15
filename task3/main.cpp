@@ -1,4 +1,4 @@
-#include "./Parser/Parser.hh"
+#include "src/Parser/Parser.hh"
 #include <filesystem>
 #include <iostream>
 #include <string>

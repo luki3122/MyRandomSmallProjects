@@ -76,11 +76,11 @@ std::string ParsedFileData::print() const {
   if (_file_name != "")
     ss << "File name:   " << getFileName() << "\n";
 
-  ss << "Lines:       " << getNOLines() << '\n'
-     << "Comments:    " << getNOCommentedLines() << '\n'
-     << "Code lines:  " << getNOCodeLines() << '\n'
-     << "Blank lines: " << getNOBlankLines() << '\n'
-     << "Parsed in:   " << getFormatedDuration() << '\n';
+  ss << "Lines:         " << getNOLines() << '\n'
+     << "Comments:      " << getNOCommentedLines() << '\n'
+     << "Code lines:    " << getNOCodeLines() << '\n'
+     << "Blank lines:   " << getNOBlankLines() << '\n'
+     << "Parsed in:     " << getFormatedDuration() << '\n';
   return ss.str();
 }
 

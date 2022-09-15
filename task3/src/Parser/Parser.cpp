@@ -3,6 +3,7 @@
 #include "ParserException.hh"
 #include "ParserOptions.hh"
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -27,7 +28,8 @@ void Parser::checkIfFileIsRegular(const fs::path &path) {
 }
 
 bool Parser::fileShouldBeParsed(const fs::path &path) {
-  return std::find(getOptions().getExtensions().begin(),
+  return fs::is_regular_file(path) &&
+         std::find(getOptions().getExtensions().begin(),
                    getOptions().getExtensions().end(),
                    path.extension()) != getOptions().getExtensions().end();
 }
@@ -51,7 +53,7 @@ IParsedData *Parser::parse(const fs::path &path) {
     return new ParsedFileData(parseFile(path));
 }
 
-void getAndFormatLine(std::ifstream &input, std::string line) {
+void getAndFormatLine(std::ifstream &input, std::string &line) {
 
   std::getline(input, line);
   line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
