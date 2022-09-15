@@ -1,0 +1,1 @@
+add_library(string_list AnyType.cpp AnyType.hh)
