@@ -26,7 +26,7 @@ template <typename T>
 requires storable<T>
 class Type : public BaseType {
 private:
-  T value;
+  T value = T();
 
 public:
   Type(const T new_value);
@@ -50,6 +50,8 @@ public:
 
   template <typename T> T getValue() const;
   std::string getTypeName() const;
+  void destroy();
+  void swap(AnyType &anytype);
 
   template <typename T>
   requires storable<T> AnyType &operator=(const T &value);

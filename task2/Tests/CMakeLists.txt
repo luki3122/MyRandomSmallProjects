@@ -11,11 +11,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 add_library(GTest::GTest INTERFACE IMPORTED)
 
-add_executable(AnyType_Tests tests.cpp)
+add_executable(AnyType_Tests AnyTypeTests.cpp)
 
 target_link_libraries(GTest::GTest INTERFACE gtest_main)
 
-target_link_libraries(AnyType_Tests PRIVATE GTest::GTest string_list)
+target_link_libraries(AnyType_Tests PRIVATE GTest::GTest AnyType)
 
 enable_testing()
 

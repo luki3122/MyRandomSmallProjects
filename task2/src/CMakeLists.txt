@@ -1,1 +1,2 @@
-add_library(string_list AnyType.cpp AnyType.hh)
+set(CXX_STANDARD_REQUIRED 20)
+add_library(AnyType AnyType.cpp AnyType.hh)
