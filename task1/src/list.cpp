@@ -1,14 +1,21 @@
 #include "list.h"
+#include <cstddef>
 #include <string.h>
 
 // node struct functions
 String NodeGetString(StringListNode node) { return *((String *)node); }
 
+void NodeInitString(StringListNode node, String str) {
+  size_t size = strlen(str);
+  String new_str = (String)malloc(size);
+  strcpy(new_str, str);
+  *((String *)node) = new_str;
+}
 void NodeSetString(StringListNode node, String str) {
   if (NodeGetString(node)) {
     free(NodeGetString(node));
   }
-  int size = strlen(str);
+  size_t size = strlen(str);
   String new_str = (String)malloc(size);
   strcpy(new_str, str);
   *((String *)node) = new_str;
@@ -22,10 +29,10 @@ void NodeSetNext(StringListNode node, StringList next_node) {
 
 StringListNode NodeInit(String str, StringListNode next_node) {
   StringListNode node = malloc(16);
-  int size = strlen(str);
+  size_t size = strlen(str);
   String new_str = (String)malloc(size);
   strcpy(new_str, str);
-  NodeSetString(node, new_str);
+  NodeInitString(node, new_str);
   NodeSetNext(node, next_node);
   return node;
 }
@@ -36,8 +43,10 @@ void NodeDestroy(StringListNode node) {
 }
 
 // stringList node function
-void StringListSetSize(StringList list, int size) { *((int *)list) = size; }
-int GetSize(StringList list) { return *((int *)list); }
+void StringListSetSize(StringList list, size_t size) {
+  *((size_t *)list) = size;
+}
+size_t GetSize(StringList list) { return *((size_t *)list); }
 
 StringListNode StringListGetNodes(StringList list) {
   return *((void **)list + 1);
@@ -48,7 +57,7 @@ void StringListSetNodes(StringList list, StringListNode node) {
 }
 
 // helper functions
-StringListNode StringListNodeAtIndex(StringList list, int index) {
+StringListNode StringListNodeAtIndex(StringList list, size_t index) {
   if (index < 0)
     return NULL;
   if (index >= GetSize(list))
@@ -80,10 +89,12 @@ void StringListRemoveNode(StringListNode list, StringListNode prev_node,
 // changing size of the array, removing and adding elements does not change the
 // list.
 // changing string chars will change them in the list.
-StringListNode *StringListGetArrayRepresentation(StringList list, int *size) {
-  StringListNode *array = malloc(GetSize(list) * 8);
+StringListNode *StringListGetArrayRepresentation(StringList list,
+                                                 size_t *size) {
+  StringListNode *array = (void **)malloc(GetSize(list) * 8);
   StringListNode node = StringListGetNodes(list);
-  for (int i = 0, max = GetSize(list); i < max; i++, node = NodeGetNext(node)) {
+  for (size_t i = 0, max = GetSize(list); i < max;
+       i++, node = NodeGetNext(node)) {
     array[i] = node;
   }
   *size = GetSize(list);
@@ -153,12 +164,12 @@ void Init(StringList *list) {
 
 void Destroy(StringList *list) {
   StringListNode node = StringListGetNodes(*list);
-  for (int i = GetSize(*list); i > 0; i--) {
+  for (size_t i = GetSize(*list); i > 0; i--) {
     StringListNode current = node;
     node = NodeGetNext(node);
     NodeDestroy(current);
   }
-  free(list);
+  free(*list);
   list = NULL;
 }
 
@@ -192,15 +203,20 @@ void PushBack(StringList list, String str) {
 void RemoveAllString(StringList list, String str) {
   StringListNode node = StringListGetNodes(list);
   StringListNode prev_node = NULL;
-  for (; node != NULL; prev_node = node, node = NodeGetNext(node)) {
+  while (node != NULL) {
 
+    StringListNode next = NodeGetNext(node);
     if (!strcmp(NodeGetString(node), str)) {
       StringListRemoveNode(list, prev_node, node);
+    } else {
+      prev_node = node;
     }
+
+    node = next;
   }
 }
 
-void RemoveAtIndex(StringList list, int index) {
+void RemoveAtIndex(StringList list, size_t index) {
   if (index < GetSize(list))
     return;
 
@@ -211,9 +227,9 @@ void RemoveAtIndex(StringList list, int index) {
 
   StringListRemoveNode(list, prev_node, node);
 }
-int IndexOf(StringList list, String str) {
+size_t IndexOf(StringList list, String str) {
   StringListNode node = StringListGetNodes(list);
-  for (int i = 0; i < GetSize(list); i++, node = NodeGetNext(node)) {
+  for (size_t i = 0; i < GetSize(list); i++, node = NodeGetNext(node)) {
     if (!strcmp(NodeGetString(node), str)) {
       return i;
     }
@@ -221,7 +237,7 @@ int IndexOf(StringList list, String str) {
   return -1;
 }
 
-String StringAtIndex(StringList list, int index) {
+String StringAtIndex(StringList list, size_t index) {
   return NodeGetString(StringListNodeAtIndex(list, index));
 }
 
@@ -243,7 +259,7 @@ void RemoveDuplicates(StringList list) {
 }
 
 void Sort(StringList list) {
-  int size;
+  size_t size;
   StringListNode *array;
   array = StringListGetArrayRepresentation(list, &size);
   quickSort(array, 0, size - 1);

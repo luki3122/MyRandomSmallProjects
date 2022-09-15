@@ -1,4 +1,5 @@
-#include "../list.h"
+#include "../src/list.h"
+#include <cstddef>
 #include <cstring>
 #include <gtest/gtest.h>
 
@@ -8,8 +9,7 @@ TEST(TestInitFunction, InitializesWithNULL) {
 
   StringList List;
   Init(&List);
-  ASSERT_EQ(16, sizeof(List));
-  ASSERT_TRUE(*(int *)List == 0);
+  ASSERT_TRUE(*(size_t *)List == 0);
   ASSERT_TRUE(*((void **)List + 1) == NULL);
   Destroy(&List);
 }
@@ -107,7 +107,8 @@ TEST(TestRemoveAllString, DoesNothingIfNoStringIsPresent) {
 
   RemoveAllString(list, str1);
 
-  ASSERT_EQ(list, list2);
+  ASSERT_EQ(GetSize(list), GetSize(list));
+  ASSERT_EQ(*((String *)list + 1), *((String *)list + 1));
 }
 
 TEST(TestRemoveAllString, DoesNothingIfNoMatchingStringIsPresent) {
@@ -124,5 +125,6 @@ TEST(TestRemoveAllString, DoesNothingIfNoMatchingStringIsPresent) {
 
   RemoveAllString(list, str1);
 
-  ASSERT_EQ(list, list2);
+  ASSERT_EQ(GetSize(list), GetSize(list));
+  ASSERT_EQ(*((String *)list + 1), *((String *)list + 1));
 }

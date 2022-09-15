@@ -25,10 +25,10 @@ void AddAtIndex(StringList list, String str, size_t index);
 void PushBack(StringList list, String str);
 void RemoveAllString(StringList list, String str);
 void RemoveAtIndex(StringList list, int index);
-int GetSize(StringList list);
+size_t GetSize(StringList list);
 
-String StringAtIndex(StringList list, int index);
-int IndexOf(StringList list, String str);
+String StringAtIndex(StringList list, size_t index);
+size_t IndexOf(StringList list, String str);
 
 void RemoveDuplicates(StringList list);
 
